@@ -1,0 +1,27 @@
+{
+    "model_architecture": "custom_face_mask_cnn",
+    "input_shape": [
+        128,
+        128,
+        3
+    ],
+    "total_parameters": 259010,
+    "trainable_parameters": 258306,
+    "class_mapping": {
+        "with_mask": 0,
+        "without_mask": 1
+    },
+    "index_to_class": {
+        "0": "with_mask",
+        "1": "without_mask"
+    },
+    "normalization": "pixel / 255.0 to [0, 1]",
+    "training_samples": 5072,
+    "validation_samples": 1087,
+    "batch_size": 32,
+    "epochs_trained": 15,
+    "training_duration": "0:16:33.475664",
+    "best_val_loss": 0.07742185890674591,
+    "best_val_accuracy": 0.9733210802078247,
+    "model_file": "best_mask_detector_cnn.keras"
+}

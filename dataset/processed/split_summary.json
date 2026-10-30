@@ -1,0 +1,23 @@
+{
+    "total_images": 7247,
+    "train_count": 5072,
+    "val_count": 1087,
+    "test_count": 1088,
+    "train_class_counts": {
+        "without_mask": 2602,
+        "with_mask": 2470
+    },
+    "val_class_counts": {
+        "without_mask": 558,
+        "with_mask": 529
+    },
+    "test_class_counts": {
+        "without_mask": 558,
+        "with_mask": 530
+    },
+    "class_mapping": {
+        "with_mask": 0,
+        "without_mask": 1
+    },
+    "random_seed": 42
+}

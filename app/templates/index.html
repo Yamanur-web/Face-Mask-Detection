@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Mask Detection — Deep Learning System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-container">
+                <div class="brand">
+                    <div class="brand-icon">
+                        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5z"></path>
+                            <path d="M9 14h6"></path>
+                            <path d="M9 17h6"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="brand-title">FaceShield <span class="gradient-text">CNN</span></h1>
+                        <p class="brand-subtitle">Real-time Face Mask Detection with Custom Deep Learning</p>
+                    </div>
+                </div>
+
+                <div class="header-badges">
+                    <div class="metric-pill">
+                        <span class="pill-dot green-pulse"></span>
+                        <span class="pill-label">Test Accuracy:</span>
+                        <strong class="pill-value">96.88%</strong>
+                    </div>
+                    <div class="metric-pill">
+                        <span class="pill-label">Resolution:</span>
+                        <strong class="pill-value">128×128 RGB</strong>
+                    </div>
+                    <div class="metric-pill">
+                        <span class="pill-label">Engine:</span>
+                        <strong class="pill-value">CPU (oneDNN)</strong>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="main-container">
+            <!-- Mode Switcher Tabs -->
+            <nav class="mode-tabs">
+                <button class="tab-btn active" id="tabUploadBtn" onclick="switchMode('upload')">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                        <polyline points="21 15 16 10 5 21"></polyline>
+                    </svg>
+                    Image Upload Analysis
+                </button>
+                <button class="tab-btn" id="tabWebcamBtn" onclick="switchMode('webcam')">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M23 7l-7 5 7 5V7z"></path>
+                        <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                    </svg>
+                    Live Webcam Detection
+                </button>
+            </nav>
+
+            <!-- Mode 1: Image Upload -->
+            <section class="mode-panel active" id="panelUpload">
+                <div class="panel-grid">
+                    <!-- Upload Dropzone & Controls -->
+                    <div class="card control-card">
+                        <h2 class="card-title">Upload Face Image</h2>
+                        <p class="card-desc">Select or drag & drop a photo. The system will detect all faces and classify mask usage.</p>
+
+                        <div class="dropzone" id="dropzone">
+                            <input type="file" id="imageInput" accept="image/jpeg,image/png,image/webp,image/bmp" hidden>
+                            <div class="dropzone-content" id="dropzonePrompt">
+                                <div class="upload-icon-circle">
+                                    <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="17 8 12 3 7 8"></polyline>
+                                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                                    </svg>
+                                </div>
+                                <p class="dropzone-text"><strong>Click to browse</strong> or drag an image here</p>
+                                <span class="dropzone-subtext">JPG, PNG, WEBP (Max 16 MB)</span>
+                            </div>
+                            <img id="uploadPreview" class="image-preview" alt="Preview" style="display: none;">
+                        </div>
+
+                        <div class="action-btn-group">
+                            <button class="btn btn-primary" id="analyzeBtn" onclick="analyzeUploadedImage()" disabled>
+                                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                </svg>
+                                Detect Faces & Classify
+                            </button>
+                            <button class="btn btn-secondary" id="resetBtn" onclick="resetUpload()" style="display: none;">
+                                Reset
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Upload Results Card -->
+                    <div class="card result-card">
+                        <div class="result-header">
+                            <h2 class="card-title">Detection Result</h2>
+                            <span class="latency-badge" id="uploadLatency" style="display: none;">Latency: 0ms</span>
+                        </div>
+
+                        <!-- Result Display Container -->
+                        <div class="result-canvas-container" id="resultCanvasContainer">
+                            <div class="empty-state" id="emptyState">
+                                <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                    <circle cx="9" cy="9" r="2"></circle>
+                                    <path d="M21 15l-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path>
+                                </svg>
+                                <p>Upload an image to see detection results with bounding boxes</p>
+                            </div>
+                            <img id="resultImage" class="result-image" alt="Detection Output" style="display: none;">
+                            <div class="spinner" id="uploadSpinner" style="display: none;"></div>
+                        </div>
+
+                        <!-- Summary Counters -->
+                        <div class="stats-row" id="statsRow" style="display: none;">
+                            <div class="stat-box total">
+                                <span class="stat-number" id="countTotal">0</span>
+                                <span class="stat-label">Faces Found</span>
+                            </div>
+                            <div class="stat-box mask">
+                                <span class="stat-number" id="countMask">0</span>
+                                <span class="stat-label">Wearing Mask</span>
+                            </div>
+                            <div class="stat-box nomask">
+                                <span class="stat-number" id="countNoMask">0</span>
+                                <span class="stat-label">No Mask</span>
+                            </div>
+                        </div>
+
+                        <!-- No Face Detected Alert -->
+                        <div class="alert alert-warning" id="noFaceAlert" style="display: none;">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="12"></line>
+                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                            </svg>
+                            <div>
+                                <strong>No face detected.</strong>
+                                <span>Please ensure the face is visible, facing forward, and well-lit.</span>
+                            </div>
+                        </div>
+
+                        <!-- Detailed Detections List -->
+                        <div class="detections-list" id="detectionsList" style="display: none;">
+                            <h3 class="list-title">Detected Faces Breakdown</h3>
+                            <div class="chips-container" id="chipsContainer"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Mode 2: Live Webcam -->
+            <section class="mode-panel" id="panelWebcam">
+                <div class="panel-grid">
+                    <!-- Webcam Stream Viewport -->
+                    <div class="card webcam-card">
+                        <div class="webcam-header">
+                            <div>
+                                <h2 class="card-title">Live Video Stream</h2>
+                                <p class="card-desc">Real-time OpenCV detection and CNN mask inference</p>
+                            </div>
+                            <div class="webcam-status-pill" id="webcamStatusPill">
+                                <span class="pill-dot"></span>
+                                <span id="webcamStatusText">Camera Offline</span>
+                            </div>
+                        </div>
+
+                        <!-- Video / Canvas Feed -->
+                        <div class="video-container">
+                            <video id="webcamVideo" autoplay playsinline muted style="display: none;"></video>
+                            <canvas id="captureCanvas" style="display: none;"></canvas>
+                            <img id="webcamStreamOutput" class="webcam-output" alt="Webcam Detection Stream" style="display: none;">
+                            
+                            <div class="webcam-placeholder" id="webcamPlaceholder">
+                                <div class="cam-icon-circle">
+                                    <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M23 7l-7 5 7 5V7z"></path>
+                                        <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                                    </svg>
+                                </div>
+                                <h3>Webcam is Currently Stopped</h3>
+                                <p>Click "Start Webcam" below to begin live face mask detection.</p>
+                            </div>
+                            <div class="spinner" id="webcamSpinner" style="display: none;"></div>
+                        </div>
+
+                        <!-- Controls -->
+                        <div class="webcam-controls">
+                            <button class="btn btn-primary" id="startCamBtn" onclick="startWebcam()">
+                                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                                </svg>
+                                Start Webcam
+                            </button>
+                            <button class="btn btn-danger" id="stopCamBtn" onclick="stopWebcam()" disabled>
+                                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="6" y="6" width="12" height="12"></rect>
+                                </svg>
+                                Stop Webcam
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Live Telemetry Card -->
+                    <div class="card telemetry-card">
+                        <h2 class="card-title">Live Telemetry</h2>
+                        <p class="card-desc">Real-time statistics per processed video frame</p>
+
+                        <div class="stats-column">
+                            <div class="telemetry-box">
+                                <span class="t-label">Inference Latency</span>
+                                <span class="t-value" id="liveFps">-- ms</span>
+                            </div>
+                            <div class="telemetry-box">
+                                <span class="t-label">Current Faces Detected</span>
+                                <span class="t-value" id="liveFaceCount">0</span>
+                            </div>
+                            <div class="telemetry-box green-border">
+                                <span class="t-label">Faces with Mask</span>
+                                <span class="t-value text-green" id="liveMaskCount">0</span>
+                            </div>
+                            <div class="telemetry-box red-border">
+                                <span class="t-label">Faces without Mask</span>
+                                <span class="t-value text-red" id="liveNoMaskCount">0</span>
+                            </div>
+                        </div>
+
+                        <!-- Guide Notice -->
+                        <div class="model-info-box">
+                            <h4>Pipeline Details:</h4>
+                            <ul>
+                                <li><strong>Face Detector:</strong> OpenCV Haar Cascades</li>
+                                <li><strong>CNN Input:</strong> 128×128 RGB</li>
+                                <li><strong>Mask Box:</strong> <span class="badge-tag green">Green Box</span></li>
+                                <li><strong>No Mask Box:</strong> <span class="badge-tag red">Red Box</span></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <p>Face Mask Detection Deep Learning Project • Custom CNN trained on CPU with 96.88% Accuracy</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
